@@ -231,8 +231,9 @@ app.get('/api/user/artworks', authenticateToken, async (req, res) => {
     }
 });
 // Start the server
-const ip = process.env.IP || 'localhost';
-const port = process.env.PORT || 5000;
-app.listen(ip,port, () => {
+const ip = process.env.IP || '0.0.0.0';
+const port = process.env.PORT || 10000;
+app.listen(port,ip, () => {
+    // app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
