@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const pool = new Pool();
 
 exports.register = async (req, res) => {
@@ -18,10 +19,13 @@ exports.register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert new user
-        const insertUserQuery = 'INSERT INTO users (username, email, password) VALUES ($1, $2, $3)';
-        await pool.query(insertUserQuery, [username, email, hashedPassword]);
+        const insertUserQuery = 'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *';
+        const newUser = await pool.query(insertUserQuery, [username, email, hashedPassword]);
 
-        res.json({ success: true });
+        // Generate JWT token
+        const token = jwt.sign({ id: newUser.rows[0].id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+
+        res.status(201).json({ success: true, token });
     } catch (error) {
         console.error('Error registering user:', error);
         res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
@@ -49,7 +53,10 @@ exports.login = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid username or password' });
         }
 
-        res.json({ success: true });
+        // Generate JWT token
+        const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+
+        res.json({ success: true, token });
     } catch (error) {
         console.error('Error logging in user:', error);
         res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });

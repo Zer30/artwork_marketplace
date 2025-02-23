@@ -2,10 +2,10 @@ const { Pool } = require("pg");
 
 // Database configuration
 const pool = new Pool({
-    user: "artwork_marketplace_owner",  // Your PostgreSQL username
-    host: "ep-winter-butterfly-a1y6q9i7-pooler.ap-southeast-1.aws.neon.tech", // Database server (use the IP if remote)
-    database: "artwork_marketplace", // Your database name
-    password: "npg_UIKDM3AE9RpL", // Your PostgreSQL password
+    user: "neondb_owner",  // Your PostgreSQL username
+    host: "ep-weathered-hat-a1csxlry-pooler.ap-southeast-1.aws.neon.tech", // Database server (use the IP if remote)
+    database: "neondb", // Your database name
+    password: "npg_vrI8u5CVyswc", // Your PostgreSQL password
     port: 5432, // Default PostgreSQL port
     ssl: {
         rejectUnauthorized: false 

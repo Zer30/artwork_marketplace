@@ -10,10 +10,12 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const pool = require('./db'); 
+const authRoutes = require('./routes/authRoutes');
+const artworkRoutes = require('./routes/artworkRoutes');
+const userRoutes = require('./routes/userRoutes'); // Import userRoutes
+const errorHandler = require('./middleware/errorMiddleware'); // Import errorHandler
 
 const app = express();
-// const port = process.env.PORT || 5000;
-
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -26,15 +28,6 @@ if (!fs.existsSync(uploadsDir)) {
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(uploadsDir));
 
-// Database connection
-// const pool = new Pool({
-//     user: process.env.DB_USER,
-//     host: process.env.DB_HOST,
-//     database: process.env.DB_NAME,
-//     password: process.env.DB_PASSWORD,
-//     port: process.env.DB_PORT,
-// });
-
 // Middleware
 app.use(bodyParser.json());
 
@@ -43,6 +36,10 @@ app.get("/", (req, res) => {
 });
 
 // Routes
+app.use('/auth', authRoutes);
+app.use('/artworks', artworkRoutes);
+app.use('/users', userRoutes); // Use userRoutes
+
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -57,7 +54,7 @@ app.post("/login", async (req, res) => {
 
         const user = userCheckResult.rows[0];
 
-        // Log the user object to verify accounttype
+        // Log the user object to verify account_type
         console.log('User:', user);
 
         // Compare password
@@ -70,10 +67,10 @@ app.post("/login", async (req, res) => {
         // Generate JWT
         const token = jwt.sign({ userId: user.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
 
-        // Log the user object to verify accounttype
+        // Log the user object to verify account_type
         console.log('User after password check:', user);
 
-        res.json({ success: true, token, accountType: user.accounttype }); // Include account type in the response
+        res.json({ success: true, token, account_type: user.account_type }); // Include account type in the response
     } catch (error) {
         console.error('Error logging in user:', error);
         res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
@@ -81,7 +78,7 @@ app.post("/login", async (req, res) => {
 });
 
 app.post("/register", async (req, res) => {
-    const { username, email, password, address, telephone, accountType } = req.body;
+    const { username, email, password, address, telephone, account_type } = req.body;
 
     console.log("Received registration data:", req.body);
 
@@ -98,8 +95,8 @@ app.post("/register", async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert new user
-        const insertUserQuery = 'INSERT INTO users (username, email, password, address, telephone, accounttype) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
-        const insertUserResult = await pool.query(insertUserQuery, [username, email, hashedPassword, address, telephone, accountType]);
+        const insertUserQuery = 'INSERT INTO users (username, email, password, address, telephone, account_type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
+        const insertUserResult = await pool.query(insertUserQuery, [username, email, hashedPassword, address, telephone, account_type]);
 
         console.log("Inserted user data:", insertUserResult.rows[0]);
 
@@ -230,10 +227,13 @@ app.get('/api/user/artworks', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+// Use the error handler middleware
+app.use(errorHandler);
+
 // Start the server
 const ip = process.env.IP || '0.0.0.0';
 const port = process.env.PORT || 10000;
-app.listen(port,ip, () => {
-    // app.listen(port, () => {
+app.listen(port, ip, () => {
     console.log(`Server running on port ${port}`);
 });
