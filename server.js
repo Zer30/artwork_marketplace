@@ -9,11 +9,11 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const pool = require('./db'); 
+const pool = require('./db');
 const authRoutes = require('./routes/authRoutes');
 const artworkRoutes = require('./routes/artworkRoutes');
-const userRoutes = require('./routes/userRoutes'); // Import userRoutes
-const errorHandler = require('./middleware/errorMiddleware'); // Import errorHandler
+const userRoutes = require('./routes/userRoutes');
+const errorHandler = require('./middleware/errorMiddleware');
 
 const app = express();
 app.use(cors());
@@ -38,7 +38,7 @@ app.get("/", (req, res) => {
 // Routes
 app.use('/auth', authRoutes);
 app.use('/artworks', artworkRoutes);
-app.use('/users', userRoutes); // Use userRoutes
+app.use('/users', userRoutes);
 
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
@@ -54,9 +54,6 @@ app.post("/login", async (req, res) => {
 
         const user = userCheckResult.rows[0];
 
-        // Log the user object to verify account_type
-        console.log('User:', user);
-
         // Compare password
         const isMatch = await bcrypt.compare(password, user.password);
 
@@ -67,10 +64,7 @@ app.post("/login", async (req, res) => {
         // Generate JWT
         const token = jwt.sign({ userId: user.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
 
-        // Log the user object to verify account_type
-        console.log('User after password check:', user);
-
-        res.json({ success: true, token, account_type: user.account_type }); // Include account type in the response
+        res.json({ success: true, token, account_type: user.account_type });
     } catch (error) {
         console.error('Error logging in user:', error);
         res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
